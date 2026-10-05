@@ -11,7 +11,7 @@ object NativeBridge {
     var stateListener: ((connected: Boolean, peer: String) -> Unit)? = null
     private val main = Handler(Looper.getMainLooper())
 
-    @JvmStatic external fun init(decoder: String, lowLatency: Boolean, panelW: Int, panelH: Int, refresh: Float, name: String, tcpPort: Int, frontBuffer: Boolean,
+    @JvmStatic external fun init(decoder: String, lowLatency: Boolean, panelW: Int, panelH: Int, refresh: Float, name: String, tcpPort: Int,
                               codecMask: Int, widthMm: Int, heightMm: Int, appVersion: String)
     @JvmStatic external fun setSurface(surface: Surface?)
     @JvmStatic external fun startUsb(fd: Int)

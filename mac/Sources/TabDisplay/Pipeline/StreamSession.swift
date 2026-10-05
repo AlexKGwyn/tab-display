@@ -53,6 +53,8 @@ final class StreamSession {
     private var mailbox: CapturedFrame?
     private var lastFrame: CapturedFrame?
     private var encoderGeneration = 0
+    /// Virtual display refresh: the user's choice, capped at the tablet's (at least 60 Hz).
+    private var displayRate: Double { min(Double(config.refresh), max(60, peer.refresh.rounded())) }
     private var captureSize = (w: 0, h: 0)
     private var forceKeyframe = true
     private var refinementsLeft = 0
@@ -71,6 +73,8 @@ final class StreamSession {
     private var helloContinuation: CheckedContinuation<Void, Never>?
     private var peerSeen = false
     private let peerLock = NSLock()
+    private var peerSeenOnce = false  // reader thread
+    private var lastHelloReply: Int64 = 0  // reader thread
     private var _peer = Peer()
     var peer: Peer { peerLock.withLock { _peer } }
 
@@ -104,8 +108,7 @@ final class StreamSession {
         if let mb = ProcessInfo.processInfo.environment["TD_THROUGHPUT_MB"].flatMap(Int.init) { await throughputTest(mb) }
 
         let p = peer
-        let refresh = min(Double(config.refresh), max(60, p.refresh.rounded()))
-        guard let vd = VirtualDisplay(name: p.name, panel: p.panel, sizeMm: p.sizeMm, mode: config.mode, refresh: refresh) else {
+        guard let vd = VirtualDisplay(name: p.name, panel: p.panel, sizeMm: p.sizeMm, mode: config.mode, refresh: displayRate) else {
             throw NSError(domain: "Session", code: 1, userInfo: [NSLocalizedDescriptionKey: "could not create the virtual display"])
         }
         display = vd
@@ -123,11 +126,24 @@ final class StreamSession {
         startPings()
     }
 
+    /// 60 Hz tablets: H.264 with VideoToolbox's low-latency rate control (Galaxy Tab S6 Lite: ~7.8 ms
+    /// encode at a steady 60 fps, vs ~10 ms and ~50 fps for HEVC, whose low-latency mode stalls).
+    /// Faster panels: HEVC with standard rate control (Galaxy Tab S9 at 120 Hz: ~100 fps, while
+    /// H.264 low-latency takes ~13 ms per 2560×1600 frame). `TD_CODEC=hevc|h264` overrides.
+    static func pickCodec(_ mask: UInt32, refresh: Double) -> CodecChoice {
+        let h264 = mask & UInt32(CodecMask.h264) != 0, hevc = mask & UInt32(CodecMask.hevc) != 0
+        switch ProcessInfo.processInfo.environment["TD_CODEC"] {
+        case "hevc": return hevc ? .hevc : .h264
+        case "h264": return h264 ? .h264 : .hevc
+        default: return (h264 && refresh < 61) || !hevc ? .h264 : .hevc
+        }
+    }
+
     /// Replaces the encoder (start-up or resize). Output from a replaced encoder is ignored.
     @MainActor
     private func installEncoder(for panel: (w: Int, h: Int)) throws {
         let enc = try Encoder(codec: config.codec, width: panel.w, height: panel.h, fps: config.refresh, bitrate: config.bitrate,
-                              lowLatencyRC: ProcessInfo.processInfo.environment["TD_LLRC"] == "1")
+                              lowLatencyRC: config.codec == .h264 && ProcessInfo.processInfo.environment["TD_LLRC"] != "0")
         enc.setFrameCap(config.frameCapBytes)
         let old: Encoder? = lock.withLock {
             encoderGeneration += 1
@@ -169,7 +185,7 @@ final class StreamSession {
         capture.stop()
         do {
             try installEncoder(for: panel)
-            display.reshape(panel: panel, mode: config.mode, refresh: min(Double(config.refresh), max(60, peer.refresh.rounded())))
+            display.reshape(panel: panel, mode: config.mode, refresh: displayRate)
             sendConfig()
             try await capture.start(displayID: display.displayID, width: panel.w, height: panel.h, fps: config.refresh)
         } catch {
@@ -222,7 +238,7 @@ final class StreamSession {
         config.mode = mode
         config.refresh = refresh
         Log.info("display mode → \(mode.rawValue), \(refresh) Hz")
-        display?.apply(mode: mode, refresh: min(Double(refresh), max(60, peer.refresh.rounded())))
+        display?.apply(mode: mode, refresh: displayRate)
     }
 
     func updateBitrate(_ bps: Int) {
@@ -232,12 +248,12 @@ final class StreamSession {
 
     // MARK: control messages
 
-    private func control(_ type: UInt8, _ payload: Data) -> Data {
+    private func control(_ type: UInt8, _ payload: Data, flags: UInt8 = 0) -> Data {
         lock.lock(); let s = ctrlSeq; ctrlSeq &+= 1; lock.unlock()
-        return Wire.message(type: type, seq: s, payload: payload)
+        return Wire.message(type: type, flags: flags, seq: s, payload: payload)
     }
 
-    private func sendHello() {
+    private func sendHello(reply: Bool = false) {
         var w = Writer()
         w.u32(Proto.version); w.u32(0); w.u32(0); w.f32(Float(config.refresh))
         w.u32(UInt32(CodecMask.hevc | CodecMask.h264)); w.u32(0)
@@ -246,7 +262,7 @@ final class StreamSession {
         w.u32(0); w.u32(0)  // physical size: n/a for the Mac
         let version = Data(AppInfo.version.utf8)
         w.u16(UInt16(version.count)); w.bytes(version)
-        transport.send(control(MsgType.hello, w.data))
+        transport.send(control(MsgType.hello, w.data, flags: reply ? HelloMsgFlag.reply : 0))
     }
 
     private func sendConfig() {
@@ -310,9 +326,17 @@ final class StreamSession {
                 let scale = min(1, 4096 / Double(max(w, h)))
                 let pw = Int(Double(w) * scale) & ~1, ph = Int(Double(h) * scale) & ~1
                 peerLock.withLock { _peer = Peer(name: name.isEmpty ? "Tablet" : name, panel: (pw, ph), sizeMm: mm, refresh: Double(hz), codecMask: UInt8(truncatingIfNeeded: codecs), appVersion: appVersion) }
-                config.codec = codecs & UInt32(CodecMask.hevc) != 0 ? .hevc : .h264
+                config.codec = StreamSession.pickCodec(codecs, refresh: Double(hz))
             }
             onPeer?(name)
+            // Answer a HELLO that isn't itself a reply (e.g. the tablet app restarted mid-session),
+            // so the tablet knows a Mac is here. At most once a second: a 1.0.0 tablet app answers
+            // every HELLO, replies included.
+            if m.flags & HelloMsgFlag.reply == 0 && peerSeenOnce && nowNs() - lastHelloReply > 1_000_000_000 {
+                lastHelloReply = nowNs()
+                sendHello(reply: true)
+            }
+            peerSeenOnce = true
             DispatchQueue.main.async {
                 self.peerSeen = true
                 self.helloContinuation?.resume()

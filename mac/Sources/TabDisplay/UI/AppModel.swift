@@ -97,6 +97,10 @@ final class AppModel: ObservableObject {
         DistributedNotificationCenter.default().addObserver(forName: Notification.Name("com.alexgwyn.tabdisplay.showMenu"), object: nil, queue: .main) { _ in
             MainActor.assumeIsolated { AppModel.openMenuForScreenshot() }
         }
+        // Development: same as clicking Connect for the first tablet in the menu.
+        DistributedNotificationCenter.default().addObserver(forName: Notification.Name("com.alexgwyn.tabdisplay.connect"), object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { if let d = self?.devices.first { self?.connect(d) } }
+        }
         // Quit from anywhere (Dock, ⌘Q, logout): say goodbye so the tablet shows it right away.
         NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.session?.stop(reason: "app quitting") }

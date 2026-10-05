@@ -25,7 +25,7 @@ Writers therefore append a header-only `NOP` message whenever a write's total le
 | Type | # | Dir | Payload |
 | --- | --- | --- | --- |
 | NOP | 0 | both | empty; padding |
-| HELLO | 1 | both | `version u32, panel_w u32, panel_h u32, refresh f32, codec_mask u32, flags u32, name_len u16, name utf8`, then optionally `width_mm u32, height_mm u32` (panel physical size; 0 from the Mac) and `version_len u16, app_version utf8` (e.g. "1.0.0", used to warn when one app is out of date). Tablet: video area (its window) in pixels in the current orientation, codec_mask = hardware decoders it has. |
+| HELLO | 1 | both | Header flag bit0 = reply (answering a HELLO; never answered itself). Each side answers every HELLO that isn't a reply, so either can restart mid-connection. Payload: `version u32, panel_w u32, panel_h u32, refresh f32, codec_mask u32, flags u32, name_len u16, name utf8`, then optionally `width_mm u32, height_mm u32` (panel physical size; 0 from the Mac) and `version_len u16, app_version utf8` (e.g. "1.0.0", used to warn when one app is out of date). Tablet: video area (its window) in pixels in the current orientation, codec_mask = hardware decoders it has. |
 | CONFIG | 2 | Mac→tab | `codec u32, width u32, height u32, fps u32, full_range u32, session_id u32` |
 | VIDEO | 3 | Mac→tab | one Annex B access unit (VPS/SPS/PPS prepended on keyframes), then trailer `capture_cb_ns u64, encode_done_ns u64`. Header timestamp = `SCStreamFrameInfo.displayTime`. flags: bit0 keyframe, bit1 idle refinement |
 | KEYFRAME_REQUEST | 4 | tab→Mac | `reason u32` |

@@ -6,7 +6,6 @@
 #include <string>
 #include <thread>
 #include "decoder.h"
-#include "presenter.h"
 #include "util.h"
 
 struct DeviceInfo {
@@ -18,7 +17,6 @@ struct DeviceInfo {
     uint32_t widthMm = 0, heightMm = 0;
     std::string appVersion;
     std::string name;
-    bool frontBuffer = false;  // experimental single-buffered present (tears; off by default)
 };
 
 // One connection to the Mac over a byte-stream fd (AOA accessory fd or TCP socket).
@@ -50,7 +48,7 @@ private:
     void releaseDecoder();
     void frameShown(uint32_t seq, int64_t shownNs);
     void requestKeyframe(uint32_t reason);
-    void sendHello();
+    void sendHello(bool reply = false);
 
     int fd_;
     bool usb_;
@@ -69,8 +67,6 @@ private:
     std::mutex dm_;
     ANativeWindow* window_ = nullptr;
     Decoder decoder_;
-    Presenter presenter_;
-    std::atomic<bool> presenterActive_{false};
     bool haveConfig_ = false;
     uint32_t cfgCodec_ = 0, cfgW = 0, cfgH = 0;
     bool cfgFullRange_ = true;
@@ -78,6 +74,7 @@ private:
     int64_t lastVideoSeq_ = -1;
     int64_t lastKfRequest_ = 0;
     bool resyncing_ = false;
+    std::atomic<int> decoderErrors_{0};  // consecutive output errors; the reader rebuilds the decoder
     std::mutex pm_;
     std::string peer_;             // guarded by pm_
     std::string peerVersion_;      // guarded by pm_

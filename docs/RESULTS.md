@@ -34,8 +34,8 @@ Stages are measured from `SCStreamFrameInfo.displayTime`, with clocks aligned by
 - **Pen input** (tablet `eventTime` → Mac injection): 1.8 ms p50 with `adb input` events. Real S Pen
   numbers are still to be measured.
 - The original 16 / 25 ms (p50 / p95) target is not reachable with this hardware and SurfaceView composition. The floor
-  is roughly encode 6 + decode 5 + compositor 9–13. The biggest remaining lever is on the tablet (front-buffered
-  rendering of decoded frames, which skips the compositor's queue at the cost of tearing).
+  is roughly encode 6 + decode 5 + compositor 9–13. Front-buffer rendering, which skips the compositor's
+  queue, was tried and dropped (see below).
 - No 240 fps camera ground-truth run yet (needs a camera).
 
 ## Other goals
@@ -75,7 +75,7 @@ Stages are measured from `SCStreamFrameInfo.displayTime`, with clocks aligned by
   `ACCESSORY_DETACHED`. The tablet therefore closes the fd as soon as its reader sees EIO; otherwise the next
   handshake fails with "could not open /dev/usb_accessory".
 
-## Experiment: single-buffered (front-buffer) present — off by default
+## Experiment: front-buffer present (removed)
 
 The panel is a command-mode DSI panel (`PanelModeCaps 0x2`, 7.5 ms transfer). The experimental path
 decodes into an `AImageReader`, then GPU-blits each frame into a single-buffered, auto-refreshing EGL
@@ -85,9 +85,20 @@ display controller re-sends every vsync. The layer composites as a hardware over
 - Estimated present dropped from ~11–12 ms to ~6.4 ms p50 (GPU-done time plus half a refresh period).
   The p95 rose to ~18 ms because of occasional slow blits.
 - **But it looked worse**: tearing (blits race the scan-out) and irregular frame pacing read as judder
-  and a lower frame rate. So it's off by default; enable with
-  `adb shell am start -n com.alexgwyn.tabdisplay/.MainActivity --ez frontbuffer true`.
-- A possible follow-up is beam-raced blits, timed just behind the scan line, so each frame lands whole at an even rate.
+  and a lower frame rate.
+- A second attempt (on a Galaxy Tab S6 Lite) wrote each frame in strips just behind the scan line, with
+  FIFO pacing. It measured tear-free and saved ~5 ms, but tearing was still visible on a Tab S9, and the
+  latency still swung by a full refresh. The Mac's virtual display runs at exactly 60.000 Hz
+  whatever fractional rate is requested, so it can't be matched to a 59.92 Hz panel. The present path is
+  SurfaceView only.
+
+## 60 Hz tablets: H.264 with low-latency rate control
+
+On a Galaxy Tab S6 Lite (2000×1200, 60 Hz, `OMX.qcom.video.decoder.hevc`, ~15 ms decode at any size),
+HEVC managed only ~50 fps with ~10 ms encode. H.264 with VideoToolbox's low-latency rate control encodes
+in ~7.8 ms at a steady 60 fps, about 7–10 ms lower total. HEVC's low-latency mode stalls (0–18 fps). On
+the Tab S9 (2560×1600 at 120 Hz), H.264 low-latency takes ~13 ms per frame, so the Mac keeps HEVC for
+tablets above 60 Hz (`TD_CODEC=hevc|h264` overrides).
 
 ## Robustness fixes found while testing
 

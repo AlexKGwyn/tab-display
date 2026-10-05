@@ -68,6 +68,7 @@ Scripts assume a tablet connected with USB debugging on and a debug build instal
 | --- | --- |
 | `tools/measure.sh usb 15` | Restart both apps, run the moving test pattern, print stage latencies |
 | `tools/replug.sh 20` | Simulated unplug/replug loop |
+| `tools/tablet_accept_usb.sh` | Accepts the tablet's "open Tab Display for this accessory" prompt |
 | `tools/textquality.sh 1.0` | Scroll a 12 pt text page; compare the tablet's screen with the Mac's capture |
 | `tools/build/testpattern [--screen NAME]` | Moving bar and ms clock on the virtual display (camera latency test) |
 | `tools/build/inputinspector` | Logs every mouse/tablet/scroll event arriving on the virtual display |
@@ -82,12 +83,11 @@ Development hooks in the Mac app:
 - `--snapshot DIR` renders the menu and menu bar icon to PNGs.
 - `--adb list|install|authorize` runs the menu's tablet-app actions and logs the results.
 - `--transport tcp` uses the `adb forward` dev link.
-- Distributed notifications `com.alexgwyn.tabdisplay.reloadSettings` (re-apply settings written with
+- Distributed notifications `com.alexgwyn.tabdisplay.connect` (click Connect for the first tablet), `com.alexgwyn.tabdisplay.reloadSettings` (re-apply settings written with
   `defaults write`) and `com.alexgwyn.tabdisplay.showMenu` (open the menu).
 
 Experiment switches:
 - Mac env (`open --env K=V …`): `TD_LLRC`, `TD_INFLIGHT`, `TD_THROUGHPUT_MB`, `TD_YSTATS`, `TD_VERIFY`,
-  `TD_VIDEORANGE`, `TD_REFINE_QP1/2`, `TD_REALTIME`, `TD_EXPECTED_FPS`.
+  `TD_VIDEORANGE`, `TD_REFINE_QP1/2`, `TD_REALTIME`, `TD_EXPECTED_FPS`, `TD_CODEC=hevc|h264`
+  (`TD_LLRC=0` turns off H.264 low-latency rate control).
 - Tablet: `adb shell setprop debug.tabdisplay.<rate|ll|eop|nonubwc|range|transfer|nocolor> <int>`.
-- Experimental front-buffer present on the tablet:
-  `adb shell am start -n com.alexgwyn.tabdisplay/.MainActivity --ez frontbuffer true`.

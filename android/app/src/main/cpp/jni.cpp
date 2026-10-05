@@ -111,7 +111,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void*) {
 }
 
 JNIEXPORT void JNICALL Java_com_alexgwyn_tabdisplay_NativeBridge_init(JNIEnv* env, jclass, jstring decoder, jboolean lowLatency,
-                                                             jint w, jint h, jfloat refresh, jstring name, jint tcpPort, jboolean frontBuffer,
+                                                             jint w, jint h, jfloat refresh, jstring name, jint tcpPort,
                                                              jint codecMask, jint widthMm, jint heightMm, jstring appVersion) {
     static bool started = false;
     g_dev.decoderName = jstr(env, decoder);
@@ -120,7 +120,6 @@ JNIEXPORT void JNICALL Java_com_alexgwyn_tabdisplay_NativeBridge_init(JNIEnv* en
     g_dev.panelH = h;
     g_dev.refresh = refresh;
     g_dev.name = jstr(env, name);
-    g_dev.frontBuffer = frontBuffer;
     g_dev.codecMask = uint32_t(codecMask);
     g_dev.appVersion = jstr(env, appVersion);
     g_dev.widthMm = uint32_t(widthMm);

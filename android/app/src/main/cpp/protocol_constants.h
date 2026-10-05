@@ -45,6 +45,10 @@ namespace HelloFlag {
 constexpr uint8_t LOW_LATENCY_DECODER = 1;
 }
 
+namespace HelloMsgFlag {
+constexpr uint8_t REPLY = 1;
+}
+
 namespace KeyframeReason {
 constexpr uint8_t STARTUP = 1;
 constexpr uint8_t DECODER_ERROR = 2;

@@ -40,7 +40,7 @@ hardware and shows it pixel-for-pixel. Stylus and touch input go back over the s
   About 26 ms average from the Mac compositing a frame to it reaching the tablet's screen ([details](docs/RESULTS.md)).
 - **Installs its own tablet app.** The Mac app bundles the Android app and can install or update it over USB.
 - **Not tied to one tablet.** The tablet reports its resolution, size, refresh rate and decoders, and the
-  Mac adapts. Developed on a Galaxy Tab S9.
+  Mac adapts. Tested on a Galaxy Tab S9 and a Galaxy Tab S6 Lite.
 
 <table>
   <tr>

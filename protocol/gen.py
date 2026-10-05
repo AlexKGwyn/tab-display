@@ -21,6 +21,7 @@ GROUPS = {
     "Codec": [("HEVC", 0), ("H264", 1)],
     "CodecMask": [("HEVC", 1), ("H264", 2), ("HEVC_444", 4)],
     "HelloFlag": [("LOW_LATENCY_DECODER", 1)],
+    "HelloMsgFlag": [("REPLY", 1)],  # header flags of a HELLO: answering another HELLO (don't answer it)
     "KeyframeReason": [("STARTUP", 1), ("DECODER_ERROR", 2), ("SEQ_GAP", 3), ("USER", 4)],
     "PenPhase": [("HOVER", 0), ("DOWN", 1), ("MOVE", 2), ("UP", 3), ("PROXIMITY_IN", 4), ("PROXIMITY_OUT", 5)],
     "PenTool": [("PEN", 0), ("ERASER", 1)],

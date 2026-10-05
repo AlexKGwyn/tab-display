@@ -68,7 +68,14 @@ final class PatternView: NSView {
 
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
-guard let screen = screenName.map({ n in NSScreen.screens.first { $0.localizedName == n } }) ?? tabDisplayScreen() else {
+// The Tab Display screen may still be appearing (just connected or reshaping): wait up to 5 s.
+var found: NSScreen?
+for _ in 0..<50 {
+    found = screenName.map({ n in NSScreen.screens.first { $0.localizedName == n } }) ?? tabDisplayScreen()
+    if found != nil { break }
+    RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+}
+guard let screen = found else {
     print("screen not found; screens: \(NSScreen.screens.map { $0.localizedName })")
     exit(1)
 }

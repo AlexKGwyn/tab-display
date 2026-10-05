@@ -44,6 +44,10 @@ object HelloFlag {
     const val LOW_LATENCY_DECODER = 1
 }
 
+object HelloMsgFlag {
+    const val REPLY = 1
+}
+
 object KeyframeReason {
     const val STARTUP = 1
     const val DECODER_ERROR = 2

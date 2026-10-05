@@ -85,7 +85,7 @@ void Session::setDisplaySize(int w, int h, uint32_t widthMm, uint32_t heightMm) 
     send(MsgType::DISPLAY_SIZE, 0, reinterpret_cast<uint8_t*>(p), sizeof p);
 }
 
-void Session::sendHello() {
+void Session::sendHello(bool reply) {
     std::lock_guard<std::mutex> dl(devm_);
     std::vector<uint8_t> p;
     put<uint32_t>(p, kVersion);
@@ -100,7 +100,7 @@ void Session::sendHello() {
     put<uint32_t>(p, dev_.heightMm);
     put<uint16_t>(p, uint16_t(dev_.appVersion.size()));
     p.insert(p.end(), dev_.appVersion.begin(), dev_.appVersion.end());
-    send(MsgType::HELLO, 0, p.data(), p.size());
+    send(MsgType::HELLO, reply ? HelloMsgFlag::REPLY : 0, p.data(), p.size());
 }
 
 void Session::requestKeyframe(uint32_t reason) {
@@ -115,6 +115,7 @@ void Session::requestKeyframe(uint32_t reason) {
 void Session::configureDecoder() {
     Decoder::Callbacks cb;
     cb.onOutput = [this](uint32_t seq, int64_t t, bool rendered) {
+        decoderErrors_ = 0;
         FrameRec r;
         {
             std::lock_guard<std::mutex> l(fm_);
@@ -129,25 +130,14 @@ void Session::configureDecoder() {
             int64_t zero = 0;
             memcpy(p, &seq, 4); memcpy(p + 4, &r.recv, 8); memcpy(p + 12, &r.decoded, 8); memcpy(p + 20, &zero, 8);
             send(MsgType::FRAME_STATS, 0, p, sizeof p);
-        } else if (!presenterActive_) {
+        } else {
             frameShown(seq, vsync().estimatePresent(t));  // through SurfaceFlinger's queue
         }
     };
-    cb.onError = [this] { LOGE("decoder error"); };
-    ANativeWindow* out = window_;
-    if (dev_.frontBuffer && presenter_.init(window_, int(cfgW), int(cfgH), [this](uint32_t seq, int64_t gpuDone) {
-            // Single-buffered auto-refresh: visible when the scan-out next passes the pixel,
-            // on average half a refresh period after the GPU finished.
-            frameShown(seq, gpuDone + vsync().period() / 2);
-        })) {
-        out = presenter_.decoderWindow();
-        presenterActive_ = true;
-        LOGI("present path: single-buffered GPU blit");
-    } else {
-        presenterActive_ = false;
-        LOGI("present path: SurfaceView queue");
-    }
-    bool ok = decoder_.configure(out, dev_.decoderName, cfgCodec_ == Codec::HEVC, cfgW, cfgH, cfgFullRange_, cb);
+    cb.onError = [this] {
+        if (decoderErrors_++ % 50 == 0) LOGE("decoder error (%d)", decoderErrors_.load());
+    };
+    bool ok = decoder_.configure(window_, dev_.decoderName, cfgCodec_ == Codec::HEVC, cfgW, cfgH, cfgFullRange_, cb);
     waitKeyframe_ = true;
     lastKfRequest_ = 0;
     if (ok) requestKeyframe(KeyframeReason::STARTUP);
@@ -156,8 +146,6 @@ void Session::configureDecoder() {
 // Called with dm_ held.
 void Session::releaseDecoder() {
     decoder_.release();
-    presenter_.release();
-    presenterActive_ = false;
 }
 
 void Session::frameShown(uint32_t seq, int64_t shownNs) {
@@ -193,6 +181,13 @@ void Session::onVideo(uint8_t flags, uint32_t seq, int64_t ts, const uint8_t* p,
         frames_[seq % frames_.size()] = {seq, ts, rd<int64_t>(p + au), rd<int64_t>(p + au + 8), recvNs, 0, uint32_t(n)};
     }
     std::lock_guard<std::mutex> l(dm_);
+    if (decoderErrors_ >= 20 && window_ && haveConfig_) {
+        // The decoder keeps failing (e.g. its surface went bad): rebuild it and start from a keyframe.
+        LOGW("decoder failing; rebuilding it");
+        decoderErrors_ = 0;
+        releaseDecoder();
+        configureDecoder();
+    }
     bool gap = lastVideoSeq_ >= 0 && int64_t(seq) != lastVideoSeq_ + 1;
     lastVideoSeq_ = seq;
     if (!decoder_.configured()) return;
@@ -238,7 +233,7 @@ void Session::handle(uint8_t type, uint8_t flags, uint32_t seq, int64_t ts, cons
         { std::lock_guard<std::mutex> pl(pm_); peer_ = name; }
         peerUp_ = true;
         lastVideoSeq_ = -1;
-        sendHello();
+        if (!(flags & HelloMsgFlag::REPLY)) sendHello(true);  // answer every HELLO that isn't a reply
         if (onState_) onState_(true, name);
         break;
     }
@@ -258,6 +253,12 @@ void Session::handle(uint8_t type, uint8_t flags, uint32_t seq, int64_t ts, cons
         cfgW = w;
         cfgH = h;
         LOGI("CONFIG codec=%u %ux%u fps=%u fullRange=%u", cfgCodec_, cfgW, cfgH, rd<uint32_t>(p + 12), rd<uint32_t>(p + 16));
+        // A CONFIG also proves a Mac is streaming to us (covers a missed HELLO).
+        if (!peerUp_.exchange(true) && onState_) {
+            std::string name;
+            { std::lock_guard<std::mutex> pl(pm_); name = peer_; }
+            onState_(true, name);
+        }
         haveConfig_ = true;
         lastVideoSeq_ = -1;
         wCapture_.clear(); wEncode_.clear(); wTransfer_.clear(); wDecode_.clear(); wPresent_.clear(); wTotal_.clear();
@@ -427,7 +428,7 @@ std::string Session::hud() {
     k += row(s + k, sizeof s - k, "encode", wEncode_);
     k += row(s + k, sizeof s - k, "transfer", wTransfer_);
     k += row(s + k, sizeof s - k, "decode", wDecode_);
-    k += row(s + k, sizeof s - k, presenterActive_ ? "present~fb" : "present~", wPresent_);
+    k += row(s + k, sizeof s - k, "present~", wPresent_);
     k += row(s + k, sizeof s - k, "total", wTotal_);
     snprintf(s + k, sizeof s - k, "\nclock rtt %.2f ms", clock_.valid() ? clock_.rtt() * 1e-6 : 0.0);
     return s;

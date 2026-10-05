@@ -130,11 +130,7 @@ class MainActivity : Activity() {
             systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
 
-        // Experimental single-buffered present: ~5 ms lower latency but tears and paces unevenly,
-        // so it is off by default. Enable with `--ez frontbuffer true`.
-        val prefs = getPreferences(MODE_PRIVATE)
-        if (intent.hasExtra("frontbuffer")) prefs.edit().putBoolean("frontBuffer", intent.getBooleanExtra("frontbuffer", false)).apply()
-        initNative(prefs.getBoolean("frontBuffer", false))
+        initNative()
         NativeBridge.stateListener = { connected, peer ->
             if (connected) {
                 lastMac = peer.ifBlank { "your Mac" }
@@ -215,7 +211,7 @@ class MainActivity : Activity() {
         return best.modeId
     }
 
-    private fun initNative(frontBuffer: Boolean) {
+    private fun initNative() {
         // The video area is the whole window in its current orientation (rotation, split screen
         // and free-form windows all just change this size; see onVideoAreaChanged).
         val bounds = windowManager.currentWindowMetrics.bounds
@@ -231,7 +227,7 @@ class MainActivity : Activity() {
         Log.i(TAG, "decoders: hevc=${hevc?.name} avc=${avc?.name} lowLatency=$lowLatency")
         val (widthMm, heightMm) = millimeters(w, h)
         NativeBridge.init(hevc?.name ?: "", lowLatency, w, h, display!!.supportedModes.maxOf { it.refreshRate },
-            deviceName(), if (BuildConfig.DEBUG) TCP_PORT else 0, frontBuffer, codecMask, widthMm, heightMm, BuildConfig.VERSION_NAME)
+            deviceName(), if (BuildConfig.DEBUG) TCP_PORT else 0, codecMask, widthMm, heightMm, BuildConfig.VERSION_NAME)
     }
 
     /** Physical size of a w×h pixel area, so macOS gets the DPI right. */

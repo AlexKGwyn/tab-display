@@ -44,6 +44,10 @@ enum HelloFlag {
     static let lowLatencyDecoder: UInt8 = 1
 }
 
+enum HelloMsgFlag {
+    static let reply: UInt8 = 1
+}
+
 enum KeyframeReason {
     static let startup: UInt8 = 1
     static let decoderError: UInt8 = 2
