@@ -15,6 +15,12 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/AlexKGwyn/tab-display/releases/latest"><img src="https://img.shields.io/github/v/release/AlexKGwyn/tab-display?label=Download&style=for-the-badge&color=3b5bff" alt="Download the latest release"></a>
+  <br>
+  <sub><a href="https://github.com/AlexKGwyn/tab-display/releases/latest">Download the Mac app (DMG) and tablet app (APK)</a> · <a href="#getting-started">Getting started</a></sub>
+</p>
+
+<p align="center">
   <img src="docs/images/tablet-sketch.png" width="760" alt="The Mac's extended desktop on the tablet, with a sketch drawn using the tablet's stylus">
 </p>
 
@@ -48,13 +54,15 @@ hardware and shows it pixel-for-pixel. Stylus and touch input go back over the s
 **Requirements:** a Mac with Apple silicon on macOS 14 or later; an Android 14+ tablet with a hardware
 HEVC or H.264 decoder; a USB‑C cable that carries data.
 
-1. Open **Tab Display** on the Mac. Grant **Screen Recording** and **Accessibility** when asked, then
-   quit and reopen it.
-2. Install the tablet app, either:
+1. Download `TabDisplay-<version>.dmg` from the [latest release](https://github.com/AlexKGwyn/tab-display/releases/latest)
+   and drag **Tab Display** to Applications. The first time, macOS blocks it because the build isn't
+   notarized yet: open **System Settings › Privacy & Security** and click **Open Anyway**.
+2. Grant **Screen Recording** and **Accessibility** when asked, then quit and reopen Tab Display.
+3. Install the tablet app, either:
    - from the Mac: turn on USB debugging on the tablet, plug it in, open the Tab Display menu and click
      **Install**; or
-   - by building `android/` yourself (see [Development](docs/DEVELOPMENT.md)).
-3. Plug the tablet in, then click **Connect** next to it in the menu. On the tablet, tick "Always open Tab
+   - by sideloading `TabDisplay-<version>.apk` from the same release onto the tablet.
+4. Plug the tablet in, then click **Connect** next to it in the menu. On the tablet, tick "Always open Tab
    Display" and tap OK. From then on it connects automatically whenever you plug it in.
 
 On the tablet, a three-finger tap toggles a latency HUD. The Mac menu's **Advanced** section has the
