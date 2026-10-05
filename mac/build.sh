@@ -34,11 +34,14 @@ if [[ $SKIP_APK == 0 ]]; then
     if (cd ../android && ./gradlew -q assembleRelease); then echo "built Android APK"
     else echo "warning: Android build failed; bundling the previous APK if any"; fi
 fi
-swift build -c release
+# Keep local paths out of the binary: project-relative file paths, and no debug map (stripped below).
+ROOT=$(cd .. && pwd)
+swift build -c release -Xswiftc -file-prefix-map -Xswiftc "$ROOT=." -Xcc "-ffile-prefix-map=$ROOT=."
 APP=dist/TabDisplay.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
 cp .build/release/TabDisplay "$APP/Contents/MacOS/TabDisplay"
+strip -S -x "$APP/Contents/MacOS/TabDisplay"  # debug symbols reference build paths on this machine
 cp Resources/AppIcon.icns "$APP/Contents/Resources/"
 cp Vendor/libusb/libusb-1.0.0.dylib "$APP/Contents/Frameworks/"
 if [[ -f $APK ]]; then cp "$APK" "$APP/Contents/Resources/TabDisplay.apk"
