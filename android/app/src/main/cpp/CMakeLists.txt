@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(tabdisplay CXX)
+add_library(tabdisplay SHARED jni.cpp session.cpp decoder.cpp presenter.cpp)
+target_compile_options(tabdisplay PRIVATE -O2 -Wall -Wno-unused-parameter)
+target_link_libraries(tabdisplay android mediandk log EGL GLESv3)

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Must match the identity strings the Mac app sends in AOA request 52. -->
+<resources>
+    <usb-accessory manufacturer="TabDisplay" model="TabDisplayHost" version="1" />
+</resources>

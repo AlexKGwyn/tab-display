@@ -1,0 +1,47 @@
+# macOS
+.DS_Store
+
+# Signing material — never commit, anywhere in the tree
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.cer
+*.mobileprovision
+*.provisionprofile
+*.keychain
+*.keychain-db
+/android/keystore.properties
+/android/keystore/
+/mac/signing/
+
+# Local environment / logs
+.env
+.env.*
+*.log
+local.properties
+
+# Mac app (SwiftPM)
+/mac/.build/
+/mac/.swiftpm/
+/mac/dist/
+xcuserdata/
+DerivedData/
+
+# Android (Gradle / NDK)
+/android/.gradle/
+/android/.kotlin/
+/android/build/
+/android/app/build/
+/android/app/.cxx/
+/android/app/release/
+.externalNativeBuild/
+captures/
+.idea/
+*.iml
+
+# Built dev tools and probes
+/tools/build/
+/probes/build/
