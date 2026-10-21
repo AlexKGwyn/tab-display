@@ -47,7 +47,15 @@ done
 python3 ../protocol/gen.py >/dev/null
 APK=../android/app/build/outputs/apk/release/app-release.apk
 if [[ $SKIP_APK == 0 ]]; then
-    export JAVA_HOME=${JAVA_HOME:-"/Applications/Android Studio.app/Contents/jbr/Contents/Home"}
+    # Gradle 8.14's bundled Kotlin compiler can't parse Java 25 (Android Studio's
+    # JBR). Respect an explicit JAVA_HOME, else prefer a JDK Gradle supports.
+    if [[ -z "${JAVA_HOME:-}" ]]; then
+        if [ -d "/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home" ]; then
+            export JAVA_HOME="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+        else
+            export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+        fi
+    fi
     if (cd ../android && ./gradlew -q assembleRelease); then echo "built Android APK"
     else echo "warning: Android build failed; bundling the previous APK if any"; fi
 fi
