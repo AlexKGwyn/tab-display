@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tab Display: turn an Android tablet into a second display for your Mac</title>
+  <meta name="description" content="Tab Display is a Mac menu bar app that turns an Android tablet into a wired, low-latency second display for your Mac, with pen and touch.">
+  <link rel="canonical" href="https://tabdisplay.alexgwyn.com/">
+  <meta property="og:title" content="Tab Display">
+  <meta property="og:description" content="Turn an Android tablet into a wired, low-latency second display for your Mac, with pen and touch.">
+  <meta property="og:url" content="https://tabdisplay.alexgwyn.com/">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#6d5cff">
+  <link rel="icon" href="assets/icon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top">
+      <img src="assets/icon.png" alt="" width="30" height="30">
+      <span>Tab Display</span>
+    </a>
+    <nav>
+      <a href="#screens">Screens</a>
+      <a href="#features">Features</a>
+      <a href="#compatibility">Compatibility</a>
+      <a class="nav-download" href="#download">Download</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <img class="hero-icon" src="assets/icon.png" alt="Tab Display app icon" width="96" height="96">
+          <h1>An Android tablet as a <span class="accent">second display</span> for your Mac.</h1>
+          <p class="lede">
+            Tab Display is a Mac menu bar app that streams your desktop to an
+            Android tablet over a USB cable. Pen and touch work like a real
+            display.
+          </p>
+          <div class="hero-stats">
+            <div class="stat"><strong>~26 ms</strong><span>average latency</span></div>
+            <div class="stat"><strong>Hardware HEVC</strong><span>over USB</span></div>
+            <div class="stat"><strong>USB-C</strong><span>wired connection</span></div>
+          </div>
+          <div class="cta">
+            <a class="button primary" href="https://github.com/AlexKGwyn/tab-display/releases/latest" target="_blank" rel="noopener noreferrer">
+              Download
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m0 0-3.5-3.5M10 12l3.5-3.5M4 15.5h12" /></svg>
+            </a>
+            <span class="cta-meta" data-release-meta>macOS 14 or later</span>
+          </div>
+          <p class="source-link"><a href="https://github.com/AlexKGwyn/tab-display" target="_blank" rel="noopener noreferrer">View source on GitHub</a></p>
+        </div>
+
+        <figure class="hero-shot">
+          <div class="tablet-frame">
+            <span class="tablet-cam" aria-hidden="true"></span>
+            <img src="assets/tablet-sketch.png" alt="The Mac's desktop shown on a tablet, with a sketch drawn using the tablet's stylus">
+          </div>
+          <figcaption>Your Mac's desktop, on the tablet. Drawn with the stylus.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Screenshots -->
+    <section id="screens" class="screens">
+      <div class="section-head">
+        <h2>Screenshots</h2>
+        <p>The Mac menu shows status and live latency. The tablet explains what to do when it isn't connected.</p>
+      </div>
+      <div class="shot-grid">
+        <figure class="shot-card">
+          <img src="assets/mac-menu.png" alt="The Tab Display menu in the Mac menu bar, showing status, live latency, display size and quality">
+          <figcaption>
+            <strong>The Mac menu</strong>
+            <span>Status, live latency, display size and quality.</span>
+          </figcaption>
+        </figure>
+        <figure class="shot-card">
+          <img src="assets/tablet-setup.png" alt="A tablet screen explaining how to set up Tab Display">
+          <figcaption>
+            <strong>Guided setup</strong>
+            <span>The tablet walks you through connecting.</span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="steps">
+      <ol>
+        <li>
+          <span class="step-num">1</span>
+          <h3>Plug it in</h3>
+          <p>Connect the tablet with a USB-C cable.</p>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <h3>It becomes a display</h3>
+          <p>Tab Display creates a virtual display and streams it over the cable.</p>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <h3>Draw and touch</h3>
+          <p>Stylus and touch work like a real display, with pressure and tilt.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="features">
+      <div class="section-head">
+        <h2>What it does</h2>
+        <p>The features that make a second display feel like a real one.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature">
+          <span class="material-symbols-outlined" aria-hidden="true">devices</span>
+          <h3>Extended desktop over USB</h3>
+          <p>Over a USB-C cable. Plug in and the tablet becomes a second display.</p>
+        </article>
+        <article class="feature">
+          <span class="material-symbols-outlined" aria-hidden="true">high_quality</span>
+          <h3>Sharp at native resolution</h3>
+          <p>HiDPI at the tablet's native resolution. Text sharpens when the screen is idle.</p>
+        </article>
+        <article class="feature">
+          <span class="material-symbols-outlined" aria-hidden="true">draw</span>
+          <h3>Stylus pressure and tilt</h3>
+          <p>Hover moves the pointer, the side button right-clicks, and it works in pressure-aware apps.</p>
+        </article>
+        <article class="feature">
+          <span class="material-symbols-outlined" aria-hidden="true">touch_app</span>
+          <h3>Touch with momentum</h3>
+          <p>One- and two-finger scrolling, tap to click, and two-finger tap to right-click.</p>
+        </article>
+        <article class="feature">
+          <span class="material-symbols-outlined" aria-hidden="true">screen_rotation</span>
+          <h3>Any orientation</h3>
+          <p>Rotate the tablet and the Mac's display reshapes in place. Split-screen works too.</p>
+        </article>
+        <article class="feature">
+          <span class="material-symbols-outlined" aria-hidden="true">memory</span>
+          <h3>Hardware encoding</h3>
+          <p>ScreenCaptureKit, VideoToolbox HEVC, USB and MediaCodec. No CPU pixel copies, about 26 ms.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Compatibility -->
+    <section id="compatibility" class="compat">
+      <div class="section-head">
+        <h2>What you'll need</h2>
+      </div>
+      <div class="compat-grid">
+        <div class="compat-card">
+          <h3>On your Mac</h3>
+          <ul>
+            <li>Apple silicon</li>
+            <li>macOS 14 or later</li>
+            <li>Screen Recording and Accessibility permission</li>
+          </ul>
+        </div>
+        <div class="compat-card">
+          <h3>On your tablet</h3>
+          <ul>
+            <li>Android 14 or later</li>
+            <li>A hardware HEVC or H.264 decoder</li>
+            <li>A USB-C cable that carries data</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download -->
+    <section id="download" class="download">
+      <img src="assets/icon.png" alt="" width="84" height="84">
+      <h2>Download Tab Display</h2>
+      <p class="lede">The Mac app and the tablet app are both on GitHub.</p>
+      <a class="button primary large" href="https://github.com/AlexKGwyn/tab-display/releases/latest" target="_blank" rel="noopener noreferrer">
+        Get the latest release
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m0 0-3.5-3.5M10 12l3.5-3.5M4 15.5h12" /></svg>
+      </a>
+      <p class="cta-meta" data-release-meta>macOS 14 or later</p>
+      <p class="source-link"><a href="https://github.com/AlexKGwyn/tab-display" target="_blank" rel="noopener noreferrer">View source on GitHub</a></p>
+
+      <div class="first-launch">
+        <h3>The first time you use it</h3>
+        <ol>
+          <li>Download the DMG and drag <strong>Tab Display</strong> into your <strong>Applications</strong> folder.</li>
+          <li>Open it, grant <strong>Screen Recording</strong> and <strong>Accessibility</strong> when asked, then quit and reopen.</li>
+          <li>Turn on USB debugging on the tablet, plug it in, and click <strong>Install</strong> in the menu.</li>
+          <li>Click <strong>Connect</strong> next to the tablet. It connects automatically from then on.</li>
+        </ol>
+        <p class="note">Tab Display installs its own tablet app over USB. You can also sideload the APK from the same release.</p>
+      </div>
+    </section>
+
+    <!-- Questions -->
+    <section class="faq">
+      <div class="section-head">
+        <h2>Questions</h2>
+      </div>
+      <details>
+        <summary>How does it connect?</summary>
+        <p>Over a USB-C cable. Just plug in the tablet and it becomes a second display.</p>
+      </details>
+      <details>
+        <summary>Will it work with my tablet?</summary>
+        <p>If it runs Android 14 or later and has a hardware HEVC or H.264 decoder, it should work. The tablet reports its resolution, size, refresh rate and decoders, and the Mac adapts.</p>
+      </details>
+      <details>
+        <summary>How fast is it?</summary>
+        <p>About 26 ms on average from the Mac compositing a frame to it reaching the tablet's screen, on an M3 MacBook Air with a Galaxy Tab S9. The menu shows a live latency chart.</p>
+      </details>
+      <details>
+        <summary>Why does macOS show a purple recording indicator?</summary>
+        <p>Tab Display captures its virtual display with ScreenCaptureKit, so macOS shows the purple screen-recording indicator while the tablet is connected.</p>
+      </details>
+      <details>
+        <summary>Is it open source?</summary>
+        <p>Yes. Tab Display is free and open source.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Tab Display by <a href="https://alexgwyn.com">alexgwyn.com</a></p>
+    <p class="fine">Not affiliated with Apple, Samsung, or Google.</p>
+  </footer>
+</body>
+</html>

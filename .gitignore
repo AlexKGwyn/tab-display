@@ -45,3 +45,6 @@ captures/
 # Built dev tools and probes
 /tools/build/
 /probes/build/
+
+# Cloudflare Wrangler state
+.wrangler/
