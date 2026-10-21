@@ -11,12 +11,29 @@
 #   else the local self-signed "TabDisplay Dev" identity in signing/dev.keychain-db (development;
 #   stable across rebuilds so Screen Recording / Accessibility grants persist); else ad-hoc.
 # Notarization (needs SIGN_IDENTITY and --dmg):
-#   xcrun notarytool store-credentials tabdisplay --apple-id you@example.com --team-id TEAMID
+#   App Store Connect API key (recommended):
+#     xcrun notarytool store-credentials tabdisplay --key AuthKey_XXXX.p8 --key-id XXXX --issuer UUID
+#   or Apple ID:
+#     xcrun notarytool store-credentials tabdisplay --apple-id you@example.com --team-id TEAMID
 #   NOTARY_PROFILE=tabdisplay ./build.sh --dmg
 set -euo pipefail
 cd "$(dirname "$0")"
 VERSION=$(cat ../VERSION)
 BUILD=${BUILD_NUMBER:-$(git rev-list --count HEAD 2>/dev/null || echo 1)}
+
+# SwiftUI's property wrappers (@State, @Environment) are macros whose plugin ships
+# with the full Xcode toolchain, not the Command Line Tools. Prefer the Xcode
+# toolchain (swift + SDK) so the build succeeds; fall back to `swift` otherwise.
+# DEVELOPER_DIR/SDKROOT are scoped to the swift build below (not exported) so
+# other tools (e.g. the /usr/bin/* xcrun shims used by gen.py) don't try to
+# resolve against Xcode and trip the Xcode license check.
+XCODE_DEV="/Applications/Xcode.app/Contents/Developer"
+XCODE_SDK="$XCODE_DEV/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
+if [ -d "$XCODE_DEV/Toolchains/XcodeDefault.xctoolchain" ]; then
+    SWIFT="$XCODE_DEV/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift"
+else
+    SWIFT="swift"
+fi
 MAKE_DMG=0; INSTALL=0; SKIP_APK=0
 for arg in "$@"; do
     case $arg in
@@ -36,7 +53,11 @@ if [[ $SKIP_APK == 0 ]]; then
 fi
 # Keep local paths out of the binary: project-relative file paths, and no debug map (stripped below).
 ROOT=$(cd .. && pwd)
-swift build -c release -Xswiftc -file-prefix-map -Xswiftc "$ROOT=." -Xcc "-ffile-prefix-map=$ROOT=."
+if [ -d "$XCODE_DEV/Toolchains/XcodeDefault.xctoolchain" ]; then
+    DEVELOPER_DIR="$XCODE_DEV" SDKROOT="$XCODE_SDK" "$SWIFT" build -c release -Xswiftc -file-prefix-map -Xswiftc "$ROOT=." -Xcc "-ffile-prefix-map=$ROOT=."
+else
+    "$SWIFT" build -c release -Xswiftc -file-prefix-map -Xswiftc "$ROOT=." -Xcc "-ffile-prefix-map=$ROOT=."
+fi
 APP=dist/TabDisplay.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
