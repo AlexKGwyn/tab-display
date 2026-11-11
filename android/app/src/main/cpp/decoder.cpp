@@ -73,6 +73,9 @@ bool Decoder::configure(ANativeWindow* window, const std::string& codecName, boo
             if (int v = prop("ll"); v >= 0) AMediaFormat_setInt32(f, AMEDIAFORMAT_KEY_LOW_LATENCY, v);
             if (int v = prop("nonubwc"); v >= 0) AMediaFormat_setInt32(f, "vendor.qti-ext-dec-forceNonUBWC.value", v);
             AMediaFormat_setInt32(f, "vendor.qti-ext-dec-picture-order.enable", 1);
+            // Other vendors' low-latency switches (also from Moonlight); decoders ignore keys they don't know.
+            AMediaFormat_setInt32(f, "vendor.rtc-ext-dec-low-latency.enable", 1);  // Samsung Exynos
+            AMediaFormat_setInt32(f, "vendor.low-latency.enable", 1);              // Amlogic
         }
         media_status_t st = AMediaCodec_configure(codec_, f, window, nullptr, 0);
         AMediaFormat_delete(f);

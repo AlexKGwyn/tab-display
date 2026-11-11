@@ -49,7 +49,10 @@ final class StreamSession {
     /// VideoToolbox waits on the capture's GPU fence before encoding; two frames in flight let
     /// that wait overlap the previous encode so the pipeline sustains 120 fps.
     private let maxInFlight = Int(ProcessInfo.processInfo.environment["TD_INFLIGHT"] ?? "") ?? 2
-    private var encoderBusy: Bool { inFlight >= maxInFlight }
+    /// Frames in the encoder plus video still queued or being written count against the same
+    /// budget, so an encode can overlap the previous frame's transfer (e.g. a large refinement
+    /// frame when motion resumes) while a slow link still never builds a queue.
+    private var pipelineFull: Bool { inFlight + transport.videoQueued >= maxInFlight }
     private var mailbox: CapturedFrame?
     private var lastFrame: CapturedFrame?
     private var encoderGeneration = 0
@@ -371,7 +374,7 @@ final class StreamSession {
         if mailbox != nil { supersededCount += 1 }
         refineGeneration += 1
         refinementsLeft = config.idleRefinement ? 2 : 0
-        if encoderBusy || transport.videoQueued > 0 {
+        if pipelineFull {
             mailbox = f
             lock.unlock()
             return
@@ -397,7 +400,7 @@ final class StreamSession {
     /// Starts the next encode if the encoder and link are free.
     private func pump() {
         lock.lock()
-        guard !encoderBusy, transport.videoQueued == 0, let f = mailbox else { lock.unlock(); return }
+        guard !pipelineFull, let f = mailbox else { lock.unlock(); return }
         mailbox = nil
         startEncodeLocked(f, refinement: false)
     }

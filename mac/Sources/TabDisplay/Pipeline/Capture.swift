@@ -40,7 +40,9 @@ final class Capture: NSObject, SCStreamOutput, SCStreamDelegate {
         cfg.colorSpaceName = CGColorSpace.sRGB
         cfg.colorMatrix = CGDisplayStream.yCbCrMatrix_ITU_R_709_2
         cfg.minimumFrameInterval = CMTime(value: 1, timescale: CMTimeScale(fps))
-        cfg.queueDepth = 4
+        // Up to three surfaces can be held at once (two in the encoder, one in the mailbox; the
+        // refinement source is one of them), so leave ScreenCaptureKit spares to composite into.
+        cfg.queueDepth = 6
         cfg.showsCursor = true
         cfg.capturesAudio = false
         let filter = SCContentFilter(display: scDisplay, excludingWindows: [])
